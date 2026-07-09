@@ -96,6 +96,14 @@ Three ideas run through all three commands.
 
 Forge is Claude Code specific, and not incidentally so. It depends on subagents with genuinely separate context windows, per-role model selection, isolated git worktrees, and, for web projects, a browser-driving MCP server. The methodology travels to any agent; this implementation does not.
 
+## Credits
+
+Forge is an implementation of ideas from two [AI Engineer](https://www.ai.engineer/) talks. The mistakes in assembling them are mine.
+
+**[Full Walkthrough: Workflow for AI Coding](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**, Matt Pocock. The grilling session that became `/forge:interview`, the smart zone and dumb zone, slicing work into vertical issues an agent can pick up independently, and the distinction between running an agent human-in-the-loop and running it AFK.
+
+**[Build Agents That Run for Hours (Without Losing the Plot)](https://www.youtube.com/watch?v=mR-WAvEPRwE)**, Ash Prabaker and Andrew Wilson, Anthropic. The generator/evaluator pattern, contract negotiation through files on disk, the case against granular upfront technical planning, and the observation that models are poor judges of their own output. `/forge:building` is largely this talk, made concrete.
+
 ## License
 
 MIT
