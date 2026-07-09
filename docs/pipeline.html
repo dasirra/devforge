@@ -70,14 +70,21 @@
   .chip.loop   { color: var(--ink-soft); border: 1px solid var(--line); background: transparent; }
   .chip.art    { color: var(--ink-soft); border: 1px dashed var(--line); background: transparent; }
 
-  /* ---------- overview rail ---------- */
-  .rail-scroll { overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
-  .rail { display: flex; align-items: stretch; gap: 0; min-width: 900px; }
+  /* ---------- overview rail ----------
+     One grid for all three rows, so the altitude bands above and the zone
+     bands below land exactly on the stop columns. Odd columns are stops,
+     even columns are the arrows between them. */
+  .rail-scroll { overflow-x: auto; padding-bottom: 8px; margin-bottom: 40px; }
+  .overview {
+    display: grid; min-width: 940px;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+    grid-template-rows: auto auto auto;
+  }
   .stop {
-    flex: 1; position: relative; padding: 14px 18px 14px 22px;
+    grid-row: 2; position: relative; padding: 14px 18px 14px 22px;
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
   }
-  .stop + .arrow { align-self: center; padding: 0 6px; color: var(--ink-soft); flex: none; }
+  .arrow { grid-row: 2; align-self: center; padding: 0 8px; color: var(--ink-soft); }
   .stop .k {
     font-family: var(--mono); font-size: 12px; font-weight: 600; display: block;
   }
@@ -89,19 +96,25 @@
   .stop.s-human::before { background: var(--human); }
   .stop.s-plan::before  { background: var(--plan); }
   .stop.s-build::before { background: var(--build); }
-  .alts { display: flex; min-width: 900px; margin-bottom: 10px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; }
-  .alts span { border-bottom: 2px solid var(--line); padding-bottom: 6px; }
-  .alts .a-pm   { flex: 4.1; border-bottom-color: var(--plan); color: var(--plan); }
-  .alts .a-gate { flex: 1; margin-left: 12px; border-bottom-color: var(--human); color: var(--human); text-align: center; }
-  .alts .a-dev  { flex: 3.05; margin-left: 12px; border-bottom-color: var(--build); color: var(--build); text-align: right; }
 
-  .zones { display: flex; min-width: 900px; margin-bottom: 40px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
-  .zones span { border-top: 2px solid var(--line); padding-top: 6px; }
-  .zones .z-hil   { flex: 2.05; border-top-color: var(--human); color: var(--human); }
-  .zones .z-afk1  { flex: 2.05; margin-left: 12px; }
-  .zones .z-sign  { flex: 1;   margin-left: 12px; border-top-color: var(--human); color: var(--human); }
-  .zones .z-afk2  { flex: 2.05; margin-left: 12px; }
-  .zones .z-merge { flex: 1;   margin-left: 12px; border-top-color: var(--human); color: var(--human); }
+  .c1 { grid-column: 1; } .c2 { grid-column: 2; } .c3 { grid-column: 3; }
+  .c4 { grid-column: 4; } .c5 { grid-column: 5; } .c6 { grid-column: 6; }
+  .c7 { grid-column: 7; } .c8 { grid-column: 8; } .c9 { grid-column: 9; }
+
+  .band {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
+  }
+  .alt {
+    grid-row: 1; border-bottom: 2px solid var(--line);
+    padding-bottom: 6px; margin-bottom: 12px;
+  }
+  .a-pm   { grid-column: 1 / 4; border-bottom-color: var(--plan);  color: var(--plan); }
+  .a-gate { grid-column: 5 / 6; border-bottom-color: var(--human); color: var(--human); text-align: center; }
+  .a-dev  { grid-column: 7 / 10; border-bottom-color: var(--build); color: var(--build); text-align: right; }
+
+  .zone { grid-row: 3; border-top: 2px solid var(--line); padding-top: 6px; margin-top: 12px; }
+  .zone.hum { border-top-color: var(--human); color: var(--human); }
 
   /* ---------- command columns ---------- */
   .cols { display: grid; grid-template-columns: 1fr 1.05fr; gap: 28px; align-items: start; }
@@ -227,32 +240,28 @@
 
 <section aria-label="End-to-end overview">
   <div class="rail-scroll">
-    <div class="alts">
-      <span class="a-pm">PM altitude · what and why</span>
-      <span class="a-gate">seam</span>
-      <span class="a-dev">DEV altitude · how</span>
-    </div>
-  </div>
-  <div class="rail-scroll">
-    <div class="rail">
-      <div class="stop s-human"><span class="k">/forge:interview</span><span class="d">relentless interview → docs/specs/&lt;slug&gt;.md</span></div>
-      <div class="arrow">→</div>
-      <div class="stop s-plan"><span class="k">/forge:planning</span><span class="d">adversarial PM plan → GitHub issues</span></div>
-      <div class="arrow">→</div>
-      <div class="stop s-human"><span class="k">👤 review</span><span class="d">edit + arbitrate issues on GitHub</span></div>
-      <div class="arrow">→</div>
-      <div class="stop s-build"><span class="k">/forge:building</span><span class="d">one phase per run → PR</span></div>
-      <div class="arrow">→</div>
-      <div class="stop s-human"><span class="k">👤 review</span><span class="d">merge PR, repeat per phase</span></div>
-    </div>
-  </div>
-  <div class="rail-scroll">
-    <div class="zones">
-      <span class="z-hil">human in the loop</span>
-      <span class="z-afk1">agents · async review</span>
-      <span class="z-sign">human</span>
-      <span class="z-afk2">agents · afk, unattended</span>
-      <span class="z-merge">human</span>
+    <div class="overview">
+
+      <span class="band alt a-pm">PM altitude · what and why</span>
+      <span class="band alt a-gate">seam</span>
+      <span class="band alt a-dev">DEV altitude · how</span>
+
+      <div class="stop s-human c1"><span class="k">/forge:interview</span><span class="d">relentless interview → docs/specs/&lt;slug&gt;.md</span></div>
+      <div class="arrow c2">→</div>
+      <div class="stop s-plan c3"><span class="k">/forge:planning</span><span class="d">adversarial PM plan → GitHub issues</span></div>
+      <div class="arrow c4">→</div>
+      <div class="stop s-human c5"><span class="k">👤 review</span><span class="d">edit + arbitrate issues on GitHub</span></div>
+      <div class="arrow c6">→</div>
+      <div class="stop s-build c7"><span class="k">/forge:building</span><span class="d">one phase per run → PR</span></div>
+      <div class="arrow c8">→</div>
+      <div class="stop s-human c9"><span class="k">👤 review</span><span class="d">merge PR, repeat per phase</span></div>
+
+      <span class="band zone hum c1">human in the loop</span>
+      <span class="band zone c3">agents · async review</span>
+      <span class="band zone hum c5">human</span>
+      <span class="band zone c7">agents · afk, unattended</span>
+      <span class="band zone hum c9">human</span>
+
     </div>
   </div>
 </section>
