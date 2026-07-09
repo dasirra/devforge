@@ -89,6 +89,12 @@
   .stop.s-human::before { background: var(--human); }
   .stop.s-plan::before  { background: var(--plan); }
   .stop.s-build::before { background: var(--build); }
+  .alts { display: flex; min-width: 900px; margin-bottom: 10px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; }
+  .alts span { border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+  .alts .a-pm   { flex: 4.1; border-bottom-color: var(--plan); color: var(--plan); }
+  .alts .a-gate { flex: 1; margin-left: 12px; border-bottom-color: var(--human); color: var(--human); text-align: center; }
+  .alts .a-dev  { flex: 3.05; margin-left: 12px; border-bottom-color: var(--build); color: var(--build); text-align: right; }
+
   .zones { display: flex; min-width: 900px; margin-bottom: 40px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
   .zones span { border-top: 2px solid var(--line); padding-top: 6px; }
   .zones .z-hil   { flex: 2.05; border-top-color: var(--human); color: var(--human); }
@@ -98,10 +104,16 @@
   .zones .z-merge { flex: 1;   margin-left: 12px; border-top-color: var(--human); color: var(--human); }
 
   /* ---------- command columns ---------- */
-  .cols { display: grid; grid-template-columns: 1fr 1.05fr; gap: 28px; align-items: stretch; }
+  .cols { display: grid; grid-template-columns: 1fr 1.05fr; gap: 28px; align-items: start; }
   @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
   .stack { display: flex; flex-direction: column; gap: 28px; }
   .stack .planning { flex: 1; }
+
+  .alt-label { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; border-top: 2px solid var(--line); padding-top: 8px; }
+  .alt-label b { font-weight: 600; }
+  .alt-label span { display: block; margin-top: 3px; font-family: var(--sans); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+  .alt-pm  { border-top-color: var(--plan);  color: var(--plan); }
+  .alt-dev { border-top-color: var(--build); color: var(--build); }
 
   .head .stepnum {
     display: inline-flex; width: 24px; height: 24px; border-radius: 50%;
@@ -215,6 +227,13 @@
 
 <section aria-label="End-to-end overview">
   <div class="rail-scroll">
+    <div class="alts">
+      <span class="a-pm">PM altitude · what and why</span>
+      <span class="a-gate">seam</span>
+      <span class="a-dev">DEV altitude · how</span>
+    </div>
+  </div>
+  <div class="rail-scroll">
     <div class="rail">
       <div class="stop s-human"><span class="k">/forge:interview</span><span class="d">relentless interview → docs/specs/&lt;slug&gt;.md</span></div>
       <div class="arrow">→</div>
@@ -241,6 +260,10 @@
 <div class="cols">
 
 <div class="stack">
+<div class="alt-label alt-pm">
+  <b>PM altitude · what and why</b>
+  <span>User stories and observable behavior. Never a file, a schema, a function, a library, a table, or an endpoint. A reviewer who reads only the issues understands the whole proposed change.</span>
+</div>
 <!-- ================= INTERVIEW ================= -->
 <section class="cmd interview" aria-label="/forge:interview phases">
   <div class="head">
@@ -329,6 +352,11 @@
 
 </div>
 
+<div class="stack">
+<div class="alt-label alt-dev">
+  <b>DEV altitude · how</b>
+  <span>Technical specificity is required, not tolerated: a criterion an evaluator cannot execute is not a criterion. The contract is negotiated against the codebase as it exists now, so it cannot go stale between planning and building.</span>
+</div>
 <!-- ================= BUILDING ================= -->
 <section class="cmd building" aria-label="/forge:building phases">
   <div class="head">
@@ -418,6 +446,7 @@
 
   </div>
 </section>
+</div>
 </div>
 
 <section class="surfaces">
