@@ -224,7 +224,7 @@
 
 <div class="wrap">
 <header>
-  <span class="eyebrow">Pipeline reference · forge@cc-forge · 2026-07-09</span>
+  <span class="eyebrow">Pipeline reference · forge@cc-forge · 2026-07-10</span>
   <h1>/forge:interview + /forge:planning + /forge:building, as currently written</h1>
   <p class="sub">Every phase, agent, artifact, and loop in the three commands. Adversarial pairs never share context; they exchange files, relayed by the orchestrator. Source: <a href="https://github.com/dasirra/cc-forge">github.com/dasirra/cc-forge</a>.</p>
   <div class="legend">
@@ -258,7 +258,7 @@
       <span class="band zone hum c1">human in the loop</span>
       <span class="band zone c3">agents · async review</span>
       <span class="band zone hum c5">human</span>
-      <span class="band zone c7">agents · afk, unattended</span>
+      <span class="band zone c7">agents · afk, one question if it invents</span>
       <span class="band zone hum c9">human</span>
 
     </div>
@@ -283,7 +283,7 @@
     <div class="phase">
       <span class="dot">1</span>
       <h3>Interview 👤</h3>
-      <p>Explore the codebase first; answer from it instead of asking. Scope check, then walk the decision tree at product altitude: behavior, edge states, scope, success criteria. Technical unknowns get parked, not asked.</p>
+      <p>Explore the codebase first; answer from it instead of asking. Scope check, then walk the decision tree at product altitude: behavior, edge states, scope, success criteria. Technical decisions get parked, not asked. What already exists gets written down: the spec's Grounding section records every system the feature consumes.</p>
       <div class="duel">
         <span class="actor human">👤 you</span>
         <span class="flow"><span class="fwd">answer</span><span class="bck">question + recommendation</span></span>
@@ -306,7 +306,7 @@
 <section class="cmd planning" aria-label="/forge:planning phases">
   <div class="head">
     <h2><span class="stepnum">2</span>/forge:planning</h2>
-    <p>PM altitude only. User stories and observable behavior; never files, schemas, or architecture.</p>
+      <p>PM altitude only. User stories and observable behavior; never schemas or architecture. Grounding is the one exemption: facts about what already exists, with their references.</p>
   </div>
   <div class="phases">
 
@@ -324,9 +324,9 @@
 
     <div class="phase">
       <span class="dot">2</span>
-      <h3>Light reality check <span class="opt">· optional</span></h3>
-      <p>One Explore subagent: what does the product do today in this area? Product-level findings only.</p>
-      <div class="chips"><span class="chip sonnet">Explore</span></div>
+      <h3>Grounding &amp; reality check <span class="opt">· greenfield only skips</span></h3>
+      <p>One Explore subagent: what does the product do today in this area, and what does it already have? Findings become a grounding table, quoted into each issue's Grounding block. Facts carry their file reference; decisions still never leak.</p>
+      <div class="chips"><span class="chip sonnet">Explore</span><span class="chip art">grounding table</span></div>
     </div>
 
     <div class="phase">
@@ -389,7 +389,7 @@
     <div class="phase">
       <span class="dot">2</span>
       <h3>Contract negotiation ⚔</h3>
-      <p>What "done" means: 10-20 observable criteria per issue + 3-8 integration criteria, each carrying a verification method written in the surface's vocabulary. The evaluator sees only issue + proposed contract and attacks vagueness, wrong tagging, weak tests. Agreed criteria post per-issue to GitHub; amendments only through this channel.</p>
+      <p>First the grounding block: every store, path, env var, collection, endpoint and dependency the contract will name, each EXISTS with file:line evidence or NEW. The lead reproduces every EXISTS with a grep and relays nothing it cannot reproduce; any NEW substrate stops for one human question, gate or no gate. Then what "done" means: 10-20 observable criteria per issue + 3-8 integration criteria, each carrying a verification method written in the surface's vocabulary. The evaluator sees only issue + proposed contract and attacks vagueness, wrong tagging, weak tests, and ungrounded nouns. Agreed criteria post per-issue to GitHub; amendments only through this channel.</p>
       <div class="duel">
         <span class="actor opus">generator · opus</span>
         <span class="flow"><span class="fwd">contract.json</span><span class="bck">objections</span></span>
@@ -402,14 +402,14 @@
     <div class="phase gate">
       <span class="dot">3</span>
       <h3>Human gate <span class="opt">· only with --gate</span></h3>
-      <p>Default is autonomous; the contract is already on the issue for async inspection.</p>
+      <p>Default is autonomous; the contract is already on the issue for async inspection. Grounding and residual risks lead the view, above the criteria. The NEW-substrate question in phase 2 is not part of this gate and fires either way.</p>
       <div class="chips"><span class="chip human">👤 optional approval</span></div>
     </div>
 
     <div class="phase">
       <span class="dot">4</span>
       <h3>Execution</h3>
-      <p>No technical plan, no PLAN.md: the contract is the plan. The lead splits criteria into workstreams with file territories inline; one sonnet teammate per workstream makes its own technical decisions against live code.</p>
+      <p>No technical plan, no PLAN.md: the contract is the plan. The lead splits criteria into workstreams with file territories inline; one sonnet teammate per workstream makes its own technical decisions against live code. Grounding is the exception: which existing system a criterion reads is a verified fact, not a builder's to re-decide.</p>
       <div class="chips"><span class="chip sonnet">builders · sonnet × N</span><span class="chip art">progress.json</span></div>
     </div>
 
@@ -481,6 +481,7 @@
     <ul>
       <li><strong>/forge:interview</strong> · the alignment that can't be delegated</li>
       <li><strong>surface confirmation</strong> · one question in preflight</li>
+      <li><strong>new substrate</strong> · one question when the contract invents a store, gate or no gate</li>
       <li><strong>issue review</strong> · edit + arbitrate on GitHub before /forge:building</li>
       <li><strong>--gate</strong> · optional contract approval</li>
       <li><strong>PR review &amp; merge</strong> · per phase, taste + QA</li>
