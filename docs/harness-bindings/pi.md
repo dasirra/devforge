@@ -3,11 +3,9 @@
 Forge's commands (`commands/interview.md`, `commands/planning.md`,
 `commands/building.md`) are written in harness-neutral prose: instead of naming
 a specific coding agent's tools or models, they use neutral verbs and tier
-markers that any harness can bind to its own equivalents. This doc is the Pi
+markers that each harness binds to its own equivalents. This doc is the Pi
 binding: it maps every neutral phrase used in the prose to the Pi coding
 agent's concrete tool or, for tiers, the open-weight model that realizes it.
-The sibling Claude Code binding is
-[`docs/harness-bindings/claude-code.md`](claude-code.md).
 
 | Neutral phrase (in commands/) | Pi binding |
 | --- | --- |
@@ -19,9 +17,8 @@ The sibling Claude Code binding is
 | a working scratch location | a `harness/` directory inside the worktree, git-excluded (per the building command's `.git/info/exclude` step) |
 
 Read each neutral phrase in the prose as the Pi tool, model, or behaviour its
-right-hand value describes, and realise that behaviour. Unlike the Claude Code
-binding — whose round-trip check needs an exact-string mapping — this is a
-semantic binding the Pi agent interprets, not a literal find-and-replace.
+right-hand value describes, and realise that behaviour: this is a semantic
+binding the Pi agent interprets, not a literal find-and-replace.
 Several right-hand values are descriptions rather than drop-in tokens (for
 example `exploratory` and `an interactive question`): when the prose says "an
 exploratory subagent", spawn a read-only forked-context subagent; do not paste
@@ -29,20 +26,17 @@ the description into the sentence.
 
 ## Single model, both tiers
 
-Unlike the Claude binding (opus for judgment, sonnet for labor), Pi runs
-GLM-5.2 for every role. The judgment/labor distinction stays legible in the
-prose but does not drive model selection here — there is no cheaper tier to
-fall back to. This is not a regression: the adversarial pairs were already
-single-model on Claude Code (planner and critic both opus; generator and
-evaluator both opus), so what makes a subagent an adversary was never the
-weights, it is the separated context.
+Pi runs GLM-5.2 for every role; both `judgment-tier` and `labor-tier` map to
+it. The judgment/labor distinction stays legible in the prose but does not
+drive model selection here — there is no separate tier to select. What makes a
+subagent an adversary is its separated context, not its weights, so a single
+model does not weaken the design on its own.
 
-Note the consequence, though. With the same model on both sides of every pair,
-**context separation is the only thing preventing a rubber-stamp**. On Claude
-Code a stronger judgment model gave some slack; here it does not. The
+There is one consequence to respect. With the same model on both sides of every
+pair, **context separation is the only thing preventing a rubber-stamp**. The
 `exploratory`/subagent binding below is therefore load-bearing, and the
-open-model reliability compensations — built once issue #4's validation shows
-which are actually needed — matter more.
+open-model reliability compensations — scoped once issue #4's validation shows
+which are actually needed — matter here.
 
 ## Required: forked-context subagents
 
@@ -56,9 +50,9 @@ if the package is absent, stop and say so rather than faking the separation.
 
 ## Evaluation surfaces (not yet neutralized)
 
-The `web` / `native` / browser-MCP lines in `commands/building.md` were left
-Claude-specific — neutralizing the evaluation-surface table was out of scope
-for the command neutralization. On Pi, read them as follows until that
+The `web` / `native` / browser-MCP lines in `commands/building.md` were not
+neutralized (that was out of scope for the command neutralization), so they
+still name tools that may not exist on Pi. Read them as follows until that
 follow-up lands:
 
 - `native` (computer-use) surface: **unavailable**. Skip any step whose only
