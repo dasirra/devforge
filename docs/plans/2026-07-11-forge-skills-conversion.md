@@ -4,7 +4,7 @@
 
 **Goal:** Convert forge's three Claude Code commands into skills so one source tree runs natively on both Claude Code and Pi.
 
-**Architecture:** Each `commands/<name>.md` becomes `skills/forge-<name>/SKILL.md` with skill frontmatter (`name`, `description`, `disable-model-invocation`). The neutralized body is preserved verbatim plus one argument-fallback line. Claude Code keeps its plugin manifest; Pi gets a `package.json` declaring the same `skills/` directory. The binding layer (`docs/harness-bindings/*`) is untouched.
+**Architecture:** Each `commands/<name>.md` becomes `skills/<name>/SKILL.md` with skill frontmatter (`name`, `description`, `disable-model-invocation`). The neutralized body is preserved verbatim plus one argument-fallback line. Claude Code keeps its plugin manifest; Pi gets a `package.json` declaring the same `skills/` directory. The binding layer (`docs/harness-bindings/*`) is untouched.
 
 **Tech Stack:** Markdown skill files, JSON manifests, `gh`/`git`, bash verification. No application code, no test framework; "tests" are structural checks (grep/diff/JSON-parse) and, for the two behavioral tasks, live invocation.
 
@@ -27,7 +27,7 @@ Resolve the naming/discovery unknowns before converting, so the skill directory 
 - Create: `docs/plans/task1-naming-findings.md` (records the resolved naming decision; kept)
 
 **Interfaces:**
-- Produces: `SKILL_NAME_PATTERN` (the exact `name:` value that yields `/forge:<workflow>` invocation, e.g. `forge:building` or `building`) and `SKILL_DIR_PATTERN` (e.g. `forge-building`), consumed by Tasks 2-4.
+- Produces: `SKILL_NAME_PATTERN` (the exact `name:` value that yields `/forge:<workflow>` invocation, e.g. `forge:building` or `building`) and `SKILL_DIR_PATTERN` (resolved by Task 1: `skills/building/`, bare workflow name), consumed by Tasks 2-4.
 
 - [ ] **Step 1: Gather the facts**
 
@@ -58,7 +58,7 @@ git commit -m "docs: resolve Claude Code plugin skill naming for conversion"
 ### Task 2: Convert the interview command to a skill
 
 **Files:**
-- Create: `skills/forge-interview/SKILL.md`
+- Create: `skills/interview/SKILL.md`
 - Delete: `commands/interview.md`
 
 **Interfaces:**
@@ -68,16 +68,16 @@ git commit -m "docs: resolve Claude Code plugin skill naming for conversion"
 
 Run:
 ```bash
-test -f skills/forge-interview/SKILL.md && echo EXISTS || echo MISSING
+test -f skills/interview/SKILL.md && echo EXISTS || echo MISSING
 ```
 Expected: `MISSING`.
 
 - [ ] **Step 2: Create the skill file with new frontmatter + preserved body**
 
 ```bash
-mkdir -p skills/forge-interview
+mkdir -p skills/interview
 # new frontmatter (name value per Task 1; shown with the default)
-cat > skills/forge-interview/SKILL.md <<'EOF'
+cat > skills/interview/SKILL.md <<'EOF'
 ---
 name: interview
 description: Relentless one-question-at-a-time grilling interview about an idea, then synthesis into a PM-level spec document ready to pass to /forge:planning. The human-in-the-loop alignment phase; produces no code and no issues.
@@ -85,7 +85,7 @@ disable-model-invocation: true
 ---
 EOF
 # append the body of the old command with its frontmatter stripped (first --- block only)
-python3 -c "import re; s=open('commands/interview.md').read(); import sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',s,count=1,flags=re.S))" >> skills/forge-interview/SKILL.md
+python3 -c "import re; s=open('commands/interview.md').read(); import sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',s,count=1,flags=re.S))" >> skills/interview/SKILL.md
 ```
 
 - [ ] **Step 3: Insert the argument-fallback line**
@@ -93,7 +93,7 @@ python3 -c "import re; s=open('commands/interview.md').read(); import sys; sys.s
 Insert immediately after the `Input: $ARGUMENTS` line:
 ```bash
 python3 - <<'PY'
-p='skills/forge-interview/SKILL.md'; s=open(p).read()
+p='skills/interview/SKILL.md'; s=open(p).read()
 anchor='Input: $ARGUMENTS\n'
 add=anchor+'\nIf `$ARGUMENTS` is empty or was not substituted, treat the user\'s request itself as the arguments.\n'
 assert anchor in s, 'anchor not found'
@@ -104,13 +104,13 @@ PY
 - [ ] **Step 4: Verify frontmatter + body parity + no forbidden tokens**
 
 ```bash
-head -5 skills/forge-interview/SKILL.md   # expect name/description/disable-model-invocation
+head -5 skills/interview/SKILL.md   # expect name/description/disable-model-invocation
 # body parity: strip frontmatter from both, diff; expect ONLY the one added fallback line
 diff <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('commands/interview.md').read(),count=1,flags=re.S),end='')") \
-     <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/forge-interview/SKILL.md').read(),count=1,flags=re.S),end='')")
+     <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/interview/SKILL.md').read(),count=1,flags=re.S),end='')")
 # expected: exactly one added line (the fallback), nothing else
-grep -nE '\b(opus|sonnet)\b|AskUserQuestion|EnterWorktree|scratchpad|code-review' skills/forge-interview/SKILL.md || echo "clean"
-grep -nw Explore skills/forge-interview/SKILL.md || echo "clean"
+grep -nE '\b(opus|sonnet)\b|AskUserQuestion|EnterWorktree|scratchpad|code-review' skills/interview/SKILL.md || echo "clean"
+grep -nw Explore skills/interview/SKILL.md || echo "clean"
 ```
 Expected: frontmatter correct; diff shows only the fallback insertion; `clean` printed twice.
 
@@ -118,7 +118,7 @@ Expected: frontmatter correct; diff shows only the fallback insertion; `clean` p
 
 ```bash
 git rm commands/interview.md
-git add skills/forge-interview/SKILL.md
+git add skills/interview/SKILL.md
 git commit -m "feat: convert interview command to a skill"
 ```
 
@@ -127,29 +127,29 @@ git commit -m "feat: convert interview command to a skill"
 ### Task 3: Convert the planning command to a skill
 
 **Files:**
-- Create: `skills/forge-planning/SKILL.md`
+- Create: `skills/planning/SKILL.md`
 - Delete: `commands/planning.md`
 
 - [ ] **Step 1: Verify absence (expect failure)**
 
 Run:
 ```bash
-test -f skills/forge-planning/SKILL.md && echo EXISTS || echo MISSING
+test -f skills/planning/SKILL.md && echo EXISTS || echo MISSING
 ```
 Expected: `MISSING`.
 
 - [ ] **Step 2: Create the skill file**
 
 ```bash
-mkdir -p skills/forge-planning
-cat > skills/forge-planning/SKILL.md <<'EOF'
+mkdir -p skills/planning
+cat > skills/planning/SKILL.md <<'EOF'
 ---
 name: planning
 description: Adversarial PM-level planning. A planner drafts an epic with user stories, a critic attacks it, they iterate, then everything lands on GitHub immediately as issues for async human review. Technical contracts are deliberately excluded; those get negotiated at /forge:building time.
 disable-model-invocation: true
 ---
 EOF
-python3 -c "import re,sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',open('commands/planning.md').read(),count=1,flags=re.S))" >> skills/forge-planning/SKILL.md
+python3 -c "import re,sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',open('commands/planning.md').read(),count=1,flags=re.S))" >> skills/planning/SKILL.md
 ```
 
 - [ ] **Step 3: Insert the argument-fallback line**
@@ -157,7 +157,7 @@ python3 -c "import re,sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',open('
 Insert immediately after the `Requested input:\n$ARGUMENTS` block:
 ```bash
 python3 - <<'PY'
-p='skills/forge-planning/SKILL.md'; s=open(p).read()
+p='skills/planning/SKILL.md'; s=open(p).read()
 anchor='Requested input:\n$ARGUMENTS\n'
 add=anchor+'\nIf `$ARGUMENTS` is empty or was not substituted, treat the user\'s request itself as the arguments.\n'
 assert anchor in s, 'anchor not found'
@@ -168,11 +168,11 @@ PY
 - [ ] **Step 4: Verify**
 
 ```bash
-head -5 skills/forge-planning/SKILL.md
+head -5 skills/planning/SKILL.md
 diff <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('commands/planning.md').read(),count=1,flags=re.S),end='')") \
-     <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/forge-planning/SKILL.md').read(),count=1,flags=re.S),end='')")
-grep -nE '\b(opus|sonnet)\b|AskUserQuestion|EnterWorktree|scratchpad|code-review' skills/forge-planning/SKILL.md || echo "clean"
-grep -nw Explore skills/forge-planning/SKILL.md || echo "clean"
+     <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/planning/SKILL.md').read(),count=1,flags=re.S),end='')")
+grep -nE '\b(opus|sonnet)\b|AskUserQuestion|EnterWorktree|scratchpad|code-review' skills/planning/SKILL.md || echo "clean"
+grep -nw Explore skills/planning/SKILL.md || echo "clean"
 ```
 Expected: correct frontmatter; diff shows only the fallback insertion; `clean` twice.
 
@@ -180,7 +180,7 @@ Expected: correct frontmatter; diff shows only the fallback insertion; `clean` t
 
 ```bash
 git rm commands/planning.md
-git add skills/forge-planning/SKILL.md
+git add skills/planning/SKILL.md
 git commit -m "feat: convert planning command to a skill"
 ```
 
@@ -189,29 +189,29 @@ git commit -m "feat: convert planning command to a skill"
 ### Task 4: Convert the building command to a skill
 
 **Files:**
-- Create: `skills/forge-building/SKILL.md`
+- Create: `skills/building/SKILL.md`
 - Delete: `commands/building.md`
 
 - [ ] **Step 1: Verify absence (expect failure)**
 
 Run:
 ```bash
-test -f skills/forge-building/SKILL.md && echo EXISTS || echo MISSING
+test -f skills/building/SKILL.md && echo EXISTS || echo MISSING
 ```
 Expected: `MISSING`.
 
 - [ ] **Step 2: Create the skill file**
 
 ```bash
-mkdir -p skills/forge-building
-cat > skills/forge-building/SKILL.md <<'EOF'
+mkdir -p skills/building
+cat > skills/building/SKILL.md <<'EOF'
 ---
 name: building
 description: Implement signed-off issues end to end with a team of agents in an isolated worktree. Before coding, a generator and an adversarial evaluator negotiate a granular contract of what "done" means; after coding, the evaluator black-box tests the running artifact against that contract until it passes. Ships as a PR.
 disable-model-invocation: true
 ---
 EOF
-python3 -c "import re,sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',open('commands/building.md').read(),count=1,flags=re.S))" >> skills/forge-building/SKILL.md
+python3 -c "import re,sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',open('commands/building.md').read(),count=1,flags=re.S))" >> skills/building/SKILL.md
 ```
 
 - [ ] **Step 3: Insert the argument-fallback line**
@@ -219,7 +219,7 @@ python3 -c "import re,sys; sys.stdout.write(re.sub(r'^---\n.*?\n---\n','',open('
 Insert immediately after the `Requested work:\n$ARGUMENTS` block:
 ```bash
 python3 - <<'PY'
-p='skills/forge-building/SKILL.md'; s=open(p).read()
+p='skills/building/SKILL.md'; s=open(p).read()
 anchor='Requested work:\n$ARGUMENTS\n'
 add=anchor+'\nIf `$ARGUMENTS` is empty or was not substituted, treat the user\'s request itself as the arguments.\n'
 assert anchor in s, 'anchor not found'
@@ -230,11 +230,11 @@ PY
 - [ ] **Step 4: Verify**
 
 ```bash
-head -5 skills/forge-building/SKILL.md
+head -5 skills/building/SKILL.md
 diff <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('commands/building.md').read(),count=1,flags=re.S),end='')") \
-     <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/forge-building/SKILL.md').read(),count=1,flags=re.S),end='')")
-grep -nE '\b(opus|sonnet)\b|AskUserQuestion|EnterWorktree|scratchpad|code-review' skills/forge-building/SKILL.md || echo "clean"
-grep -nw Explore skills/forge-building/SKILL.md || echo "clean"
+     <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/building/SKILL.md').read(),count=1,flags=re.S),end='')")
+grep -nE '\b(opus|sonnet)\b|AskUserQuestion|EnterWorktree|scratchpad|code-review' skills/building/SKILL.md || echo "clean"
+grep -nw Explore skills/building/SKILL.md || echo "clean"
 ```
 Expected: correct frontmatter; diff shows only the fallback insertion; `clean` twice.
 
@@ -242,7 +242,7 @@ Expected: correct frontmatter; diff shows only the fallback insertion; `clean` t
 
 ```bash
 git rm commands/building.md
-git add skills/forge-building/SKILL.md
+git add skills/building/SKILL.md
 git commit -m "feat: convert building command to a skill"
 ```
 
@@ -348,7 +348,7 @@ Prove the conversion is complete and consistent before any live test.
 ```bash
 test -d commands && echo "FAIL: commands/ still present" || echo "OK: no commands/"
 for w in interview planning building; do
-  f=skills/forge-$w/SKILL.md
+  f=skills/$w/SKILL.md
   test -f "$f" && echo "OK: $f" || echo "FAIL: $f missing"
   head -4 "$f" | grep -q 'name:' && head -4 "$f" | grep -q 'description:' && head -4 "$f" | grep -q 'disable-model-invocation:' && echo "  frontmatter OK" || echo "  FAIL frontmatter"
 done
@@ -370,7 +370,7 @@ git fetch -q origin building/issue-3 2>/dev/null || true
 for w in interview planning building; do
   echo "=== $w ==="
   diff <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('/dev/stdin').read(),count=1,flags=re.S),end='')" < <(git show building/issue-3:commands/$w.md)) \
-       <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/forge-$w/SKILL.md').read(),count=1,flags=re.S),end='')") \
+       <(python3 -c "import re;print(re.sub(r'^---\n.*?\n---\n','',open('skills/$w/SKILL.md').read(),count=1,flags=re.S),end='')") \
     && echo "identical" || echo "only-fallback-diff (inspect: must be exactly the one added line)"
 done
 ```
@@ -440,4 +440,4 @@ Write the observed answers to open items 1 and 2, plus pass/fail, into the PR de
 
 **Placeholder scan:** the only deferred value is `SKILL_NAME_PATTERN` from Task 1, which is a real task-produced interface with a concrete default, not a placeholder. All commands and file contents are literal.
 
-**Type consistency:** skill directory names `forge-<workflow>`, `name:` values `<workflow>` (or Task 1's resolved value), and invocation `/forge:<workflow>` are used consistently across Tasks 1-9.
+**Type consistency:** skill directory names `skills/<workflow>/` (bare, per Task 1), `name:` values `<workflow>` (or Task 1's resolved value), and invocation `/forge:<workflow>` are used consistently across Tasks 1-9.

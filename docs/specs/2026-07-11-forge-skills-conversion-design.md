@@ -39,9 +39,9 @@ the existing neutralized body verbatim:
 
 ```
 skills/
-  forge-interview/SKILL.md
-  forge-planning/SKILL.md
-  forge-building/SKILL.md
+  interview/SKILL.md
+  planning/SKILL.md
+  building/SKILL.md
 docs/harness-bindings/          # unchanged: claude-code.md, pi.md, README.md
 package.json                    # new: Pi manifest
 .claude-plugin/plugin.json      # updated: wording only
