@@ -1,9 +1,18 @@
 ---
+name: building
 description: Implement signed-off issues end to end with a team of agents in an isolated worktree. Before coding, a generator and an adversarial evaluator negotiate a granular contract of what "done" means; after coding, the evaluator black-box tests the running artifact against that contract until it passes. Ships as a PR.
-argument-hint: <#issue | #issue #issue ... | "description of the work"> [--no-gate] [--max-rounds N] [--base <branch>]
+disable-model-invocation: true
 ---
 
 # /forge:building
+
+> **Harness binding.** This command is written in harness-neutral terms: role
+> tiers (e.g. `judgment-tier`, `labor-tier`) and generic verbs, instead of one
+> agent's tool and model names. Before acting, load the binding for your
+> environment from [`docs/harness-bindings/`](../../docs/harness-bindings/README.md)
+> and resolve every neutral term to the concrete tool or model it names; when
+> the prose spawns a subagent of a given tier, use the model the binding maps
+> that tier to.
 
 You are the lead orchestrator for an end-to-end implementation run. You drive
 the work through contract negotiation, implementation, behavioral
@@ -14,12 +23,14 @@ relay artifacts, verify, and ship.
 Requested work:
 $ARGUMENTS
 
+If `$ARGUMENTS` is empty or was not substituted, treat the user's request itself as the arguments.
+
 ## Roles and models (non-negotiable)
 
-| Role | What it does | Model | Effort |
-| --- | --- | --- | --- |
-| Generator | Proposes the contract, builds, fixes | opus (contract), sonnet (build/fix) | high for contract, inherit otherwise |
-| Evaluator | Attacks the contract; later black-box tests the running artifact through its evaluation surface | opus | high |
+| Role | What it does | Model |
+| --- | --- | --- |
+| Generator | Proposes the contract, builds, fixes | judgment-tier (contract), labor-tier (build/fix) |
+| Evaluator | Attacks the contract; later black-box tests the running artifact through its evaluation surface | judgment-tier |
 
 Hard separation rule: the evaluator NEVER sees the generator's transcript,
 reasoning, self-assessment, implementation, or tests. It receives only
@@ -72,7 +83,7 @@ forces the evaluation surface.
 
 Resolve everything that can stop the run BEFORE a worktree, a contract, or an
 issue comment exists. Failing here is cheap. Failing in Phase 6, after two
-opus negotiations and a full build, is not.
+contract negotiations and a full build, is not.
 
 1. **GitHub access.** `gh auth status` and `gh repo view`. If either fails,
    stop and tell the user exactly what to run. Every run needs this: even
@@ -91,7 +102,7 @@ opus negotiations and a full build, is not.
    | `native` | launching the app or simulator | computer use |
 
    Infer the likely surface from the repo (entry points, manifests, how the
-   README says to run it) and confirm with AskUserQuestion, your inference
+   README says to run it) and confirm with an interactive question, your inference
    first and labeled "(Recommended)". Never decide silently: a repo that
    ships a library alongside a demo web app defeats every heuristic, and the
    user knows which one the contract is about. `--surface` skips the question.
@@ -116,7 +127,7 @@ Resolve the base branch ONCE and reuse it for the worktree and the PR:
 3. Otherwise the GitHub default:
    `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`.
 
-`git fetch origin "$BASE"`, then create a fresh worktree with EnterWorktree,
+`git fetch origin "$BASE"`, then create a fresh worktree with the worktree helper,
 named after the work (e.g. `building/issue-62`). All development happens
 there; never touch the original working tree. Add `harness/` to the
 worktree's `.git/info/exclude`.
@@ -127,7 +138,7 @@ This phase turns the issue's human-readable acceptance criteria into a
 granular, testable contract. Two subagents, separate contexts, artifacts
 only.
 
-1. **Generator proposes** (opus): given the issue bodies and read access to
+1. **Generator proposes** (judgment-tier): given the issue bodies and read access to
    the codebase, write `harness/contract.json`.
 
    Before any criterion, write the `grounding` block: every store, file path,
@@ -167,7 +178,7 @@ only.
    relay.
 
    Any NEW entry naming persistent substrate (a store, schema, collection, env
-   var, or external dependency) is escalated to the human with AskUserQuestion
+   var, or external dependency) is escalated to the human with an interactive question
    before the evaluator sees the contract, **gate or no gate**: "this contract
    invents `<X>`; confirm nothing existing should serve instead." Record the
    grep output and the human's answer in `harness/progress.json`, and set
@@ -175,7 +186,7 @@ only.
    Phase 0.5 surface question, and it exists for the same reason: a wrong
    answer here poisons everything downstream, and it costs a minute to ask.
 
-2. **Evaluator attacks** (opus, sees ONLY the issue body and the proposed
+2. **Evaluator attacks** (judgment-tier, sees ONLY the issue body and the proposed
    contract): find missing edge cases, criteria too vague to verify, scope
    beyond the issue, criteria tagged to the wrong issue or integration
    behavior missing entirely, tests that would pass while the feature
@@ -225,7 +236,7 @@ Either way, the NEW-substrate escalation in Phase 2 step 1.5 is not part of
 this gate and fires regardless. It asks whether the contract may invent a
 store; this gate asks whether the contract is right.
 
-## Phase 4: Execution (sonnet team, straight from the contract)
+## Phase 4: Execution (labor-tier team, straight from the contract)
 
 There is no technical planning phase and no PLAN.md: the contract is the
 plan, and technical decisions belong to the builders, made against the code
@@ -238,7 +249,7 @@ anyone:
   issue-sized work) and give each workstream a file territory, so parallel
   teammates never edit the same files.
 - Sequence dependent workstreams; run independent ones in parallel.
-- Spawn one sonnet teammate per workstream with: the issue context, the
+- Spawn one labor-tier teammate per workstream with: the issue context, the
   contract criteria its work must satisfy, its file territory, and the
   conventions to follow.
 - Prefer the project's specialized agent types when they fit the stack.
@@ -264,7 +275,7 @@ Loop, max `--max-rounds` (default 5) rounds:
 1. Start the running artifact the way the surface prescribes: run the dev
    server, install the package into a clean environment, build the
    executable, boot the service, or launch the simulator.
-2. Spawn the **evaluator** (opus) with the tools its surface needs: a browser
+2. Spawn the **evaluator** (judgment-tier) with the tools its surface needs: a browser
    MCP for `web`, computer use for `native`, Bash for `library`, `cli`, and
    `service`. It receives ONLY: the agreed contract, how to reach the running
    artifact, and the issue body.
@@ -295,7 +306,7 @@ Loop, max `--max-rounds` (default 5) rounds:
 3. On PASS: exit the loop. Track pass/fail counts per issue across rounds;
    the evaluator judges the integrated app, but results are reported per
    issue.
-4. On ROUND_FAILED: spawn a fresh sonnet fixer with the critique and the
+4. On ROUND_FAILED: spawn a fresh labor-tier fixer with the critique and the
    contract (not the evaluator's transcript). It fixes exactly what the
    critique raises, appends to `harness/progress.json`, and you re-run
    static checks, then loop.

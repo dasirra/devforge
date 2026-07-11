@@ -5,7 +5,7 @@
 [![Stars](https://img.shields.io/github/stars/dasirra/cc-forge?style=flat-square&color=B0680F)](https://github.com/dasirra/cc-forge/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/dasirra/cc-forge?style=flat-square&color=3D5A9E)](https://github.com/dasirra/cc-forge/commits/main)
 
-An opinionated idea-to-PR workflow for [Claude Code](https://claude.com/claude-code), with a human gate at each seam. Three commands, run in order.
+An opinionated idea-to-PR workflow for [Claude Code](https://claude.com/claude-code), with a human gate at each seam. Three skills, run in order.
 
 ```
 PM   /forge:interview   vague idea         ->  docs/specs/YYYY-MM-DD-<slug>.md
@@ -47,11 +47,10 @@ The other two need:
 
 - **`gh` CLI, authenticated**, in a repo with a GitHub remote. `/forge:planning` files issues; `/forge:building` reads them and opens the PR.
 - **A way to run your project and observe it from outside.** `/forge:building` resolves an *evaluation surface* up front (`web`, `library`, `cli`, `service`, or `native`) and black-box tests the contract against it. Only `web` needs an extra dependency: a browser automation MCP server, Claude in Chrome or Playwright.
-- **`/code-review`**, invoked by `/forge:building` for the final review of the integrated diff.
 
-## Commands
+## Skills
 
-| Command | Altitude | Description |
+| Skill | Altitude | Description |
 |---------|----------|-------------|
 | `/forge:interview [idea \| path/to/brief.md]` | PM | Relentless one-question-at-a-time grilling until you and Claude share an understanding of the idea, then synthesis into a PM-level spec. No code, no issues. |
 | `/forge:planning [path/to/spec.md \| description]` | PM | A planner drafts an epic with user stories, a critic attacks it in a separate context, they iterate up to 3 rounds. Files the result as a GitHub epic with native sub-issues for async human review. No technical content: no files, no schemas, no architecture. |
@@ -59,7 +58,7 @@ The other two need:
 
 ## Pipeline
 
-Adversarial pairs (⚔) never share context. They exchange files, relayed by the orchestrator. Every 👤 is a stop: the command hands you an artifact and prints the next step rather than running it.
+Adversarial pairs (⚔) never share context. They exchange files, relayed by the orchestrator. Every 👤 is a stop: the skill hands you an artifact and prints the next step rather than running it.
 
 ```mermaid
 flowchart TD
@@ -97,7 +96,7 @@ flowchart TD
         b4 --> b5["5 · Static checks"]
         b5 --> b6["6 · evaluator black-box tests<br/>the running artifact<br/>max 5 rounds"]
         b6 -.->|"ROUND_FAILED<br/>fresh fixer, sees only the critique"| b4
-        b6 --> b7["7 · PR<br/>8 · /code-review high --fix"]
+        b6 --> b7["7 · PR"]
     end
 
     BUILD --> pr[/"pull request"/]
@@ -115,11 +114,11 @@ Every phase, agent, artifact, and loop is laid out in the [full pipeline referen
 
 ## Design
 
-Three ideas run through all three commands.
+Three ideas run through all three skills.
 
 **Separate contexts, artifacts only.** Every adversarial pair (planner/critic, generator/evaluator) communicates through files, never through summarized reasoning. A critic that sees the planner's rationale rubber-stamps it.
 
-**Altitude discipline.** PM commands describe behavior, the DEV command decides implementation, and the contract that binds them is negotiated against the codebase as it exists at build time, so it cannot go stale between planning and building. See [Two altitudes](#two-altitudes).
+**Altitude discipline.** PM skills describe behavior, the DEV skill decides implementation, and the contract that binds them is negotiated against the codebase as it exists at build time, so it cannot go stale between planning and building. See [Two altitudes](#two-altitudes).
 
 **Observed behavior beats claims.** `/forge:building` will not accept "mostly works". Each contract criterion passes or fails, judged by an evaluator driving the running artifact, not by reading the diff and not by running the builder's own tests. Those tests encode the builder's understanding, so a green suite certifies whatever misunderstanding produced the bug.
 
@@ -131,7 +130,7 @@ Forge is Claude Code specific, and not incidentally so. It depends on subagents 
 
 Forge is an opinionated idea-to-PR workflow. It assembles ideas that are not mine, and the opinions and the mistakes in assembling them are.
 
-Mine are the three-command shape with a human gate at each seam, `/forge:planning` as an adversarial PM-level pass that files straight to GitHub and leaves contested items for a human to arbitrate, the altitude discipline that bans technical content until `/forge:building` negotiates it against the live codebase, the evaluation surfaces and the preflight that resolves one before anything expensive happens, and the rule that the evaluator never runs the builders' own tests.
+Mine are the three-skill shape with a human gate at each seam, `/forge:planning` as an adversarial PM-level pass that files straight to GitHub and leaves contested items for a human to arbitrate, the altitude discipline that bans technical content until `/forge:building` negotiates it against the live codebase, the evaluation surfaces and the preflight that resolves one before anything expensive happens, and the rule that the evaluator never runs the builders' own tests.
 
 **[Full Walkthrough: Workflow for AI Coding](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**, Matt Pocock, at [AI Engineer](https://www.ai.engineer/). The grilling session that became `/forge:interview`, the smart zone and dumb zone, slicing work into vertical issues an agent can pick up independently, and the distinction between running an agent human-in-the-loop and running it AFK, unattended and away from the keyboard.
 

@@ -1,9 +1,18 @@
 ---
+name: planning
 description: Adversarial PM-level planning. A planner drafts an epic with user stories, a critic attacks it, they iterate, then everything lands on GitHub immediately as issues for async human review. Technical contracts are deliberately excluded; those get negotiated at /forge:building time.
-argument-hint: "[empty = use this conversation] | path/to/spec.md | \"free-form feature description\""
+disable-model-invocation: true
 ---
 
 # /forge:planning
+
+> **Harness binding.** This command is written in harness-neutral terms: role
+> tiers (e.g. `judgment-tier`, `labor-tier`) and generic verbs, instead of one
+> agent's tool and model names. Before acting, load the binding for your
+> environment from [`docs/harness-bindings/`](../../docs/harness-bindings/README.md)
+> and resolve every neutral term to the concrete tool or model it names; when
+> the prose spawns a subagent of a given tier, use the model the binding maps
+> that tier to.
 
 You orchestrate an adversarial planning session and file the result as a GitHub
 Epic with PM-level sub-issues, created for asynchronous human
@@ -14,6 +23,8 @@ and file the outcome.
 
 Requested input:
 $ARGUMENTS
+
+If `$ARGUMENTS` is empty or was not substituted, treat the user's request itself as the arguments.
 
 ## Operating principles
 
@@ -74,7 +85,7 @@ Read the repo's existing conventions so you mirror them:
 
 ## Phase 2: Grounding and reality check (bounded; skip only if greenfield)
 
-Dispatch ONE Explore sub-agent with a narrow question: what does this product
+Dispatch ONE exploratory sub-agent with a narrow question: what does this product
 currently do in the area the feature touches, and what adjacent capabilities
 already exist? This serves the critic's feasibility judgment, sane phase
 ordering, and grounding. If the spec carries a Grounding section, verify each
@@ -87,7 +98,7 @@ other technical detail may leak. For a greenfield project, skip this phase.
 
 ## Phase 3: Planner drafts (subagent, fresh context)
 
-Spawn a subagent (model: opus) with this role:
+Spawn a subagent (model: judgment-tier) with this role:
 
 > You are a product planner. Given this feature statement [and product
 > context], write plan.md containing:
@@ -113,11 +124,11 @@ Spawn a subagent (model: opus) with this role:
 > do and in what order, nothing about how. If the feature genuinely needs only
 > 1-2 issues, say so; do not manufacture an epic.
 
-Write plan.md to the session scratchpad directory.
+Write plan.md to a working scratch location.
 
 ## Phase 4: Critic attacks (subagent, fresh context, adversarial)
 
-Spawn a separate subagent (model: opus) that receives ONLY plan.md and the
+Spawn a separate subagent (model: judgment-tier) that receives ONLY plan.md and the
 original feature statement, with this role:
 
 > You are a skeptical product reviewer. Your job is to find what is wrong with

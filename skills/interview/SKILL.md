@@ -1,9 +1,18 @@
 ---
+name: interview
 description: Relentless one-question-at-a-time grilling interview about an idea, then synthesis into a PM-level spec document ready to pass to /forge:planning. The human-in-the-loop alignment phase; produces no code and no issues.
-argument-hint: "[idea text | path/to/brief.md | empty = interview about the current conversation]"
+disable-model-invocation: true
 ---
 
 # /forge:interview
+
+> **Harness binding.** This command is written in harness-neutral terms: role
+> tiers (e.g. `judgment-tier`, `labor-tier`) and generic verbs, instead of one
+> agent's tool and model names. Before acting, load the binding for your
+> environment from [`docs/harness-bindings/`](../../docs/harness-bindings/README.md)
+> and resolve every neutral term to the concrete tool or model it names; when
+> the prose spawns a subagent of a given tier, use the model the binding maps
+> that tier to.
 
 You run a grilling session: a relentless interview that turns a vague idea
 into a shared understanding between you and the user, then you synthesize that
@@ -11,6 +20,8 @@ understanding into a spec document ready for /forge:planning. You do NOT design
 architecture, write code, create issues, or run /forge:planning yourself.
 
 Input: $ARGUMENTS
+
+If `$ARGUMENTS` is empty or was not substituted, treat the user's request itself as the arguments.
 
 Interpret the input:
 1. **Empty** -> the idea is whatever is under discussion in this conversation.
@@ -22,7 +33,7 @@ Interpret the input:
 Before the first question:
 
 - If you are inside a codebase the idea touches, explore it first (use an
-  Explore subagent if the repo is non-trivial) so your questions and
+  exploratory subagent if the repo is non-trivial) so your questions and
   recommendations are grounded in what already exists. Record what you
   find: every existing system, store, or dataset the idea would consume
   or extend goes into the spec's Grounding section as a fact, whether or
@@ -37,7 +48,7 @@ Interview rules:
   resolving dependencies between decisions one by one.
 - **One question per message.** Multiple questions at once is bewildering.
 - **Every question carries your recommended answer** with a one-line reason.
-  When the options are enumerable, use AskUserQuestion with the recommended
+  When the options are enumerable, use an interactive question with the recommended
   option first, labeled "(Recommended)".
 - If the codebase or the conversation already answers a question, answer it
   yourself and move on instead of asking.
