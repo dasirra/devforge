@@ -22,7 +22,7 @@ Interpret the input:
 Before the first question:
 
 - If you are inside a codebase the idea touches, explore it first (use an
-  Explore subagent if the repo is non-trivial) so your questions and
+  exploratory subagent if the repo is non-trivial) so your questions and
   recommendations are grounded in what already exists. Record what you
   find: every existing system, store, or dataset the idea would consume
   or extend goes into the spec's Grounding section as a fact, whether or
@@ -37,7 +37,7 @@ Interview rules:
   resolving dependencies between decisions one by one.
 - **One question per message.** Multiple questions at once is bewildering.
 - **Every question carries your recommended answer** with a one-line reason.
-  When the options are enumerable, use AskUserQuestion with the recommended
+  When the options are enumerable, use an interactive question with the recommended
   option first, labeled "(Recommended)".
 - If the codebase or the conversation already answers a question, answer it
   yourself and move on instead of asking.
