@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Never use the em dash symbol (`—`) in any file. Rewrite the sentence.
+- Never use the em dash character (the long dash, U+2014) in any file. Rewrite the sentence to avoid it.
 - Neutralized bodies stay byte-identical to their `commands/*.md` source except: (a) the frontmatter block is replaced, and (b) exactly one argument-fallback line is inserted.
 - No forbidden Claude tokens reintroduced into skill bodies: `opus`, `sonnet`, `AskUserQuestion`, `EnterWorktree`, whole-word `Explore`, `scratchpad`, `code-review` must stay absent from `skills/`.
 - Explicit-only invocation on Claude Code: every skill sets `disable-model-invocation: true`.
@@ -41,10 +41,10 @@ Confirm, from current Claude Code docs (use the claude-code-guide agent or `http
 Write the two resolved values to `docs/plans/task1-naming-findings.md`:
 ```
 SKILL_NAME_PATTERN=<resolved, e.g. building>   # yields /forge:building
-SKILL_DIR_PATTERN=forge-<workflow>             # or the resolved dir convention
+SKILL_DIR_PATTERN=skills/<workflow>/           # bare workflow name; forge plugin namespaces to /forge:<workflow>
 AUTO_DISCOVERED=<yes|no; if no, note the manifest change needed>
 ```
-Default to assume if docs are silent: dir `forge-<workflow>`, `name: <workflow>` (plugin namespaces it), auto-discovered. Note explicitly if you had to fall back to the default.
+Resolved convention (Task 1, verified against the docs): dir `skills/<workflow>/` (bare, no `forge-` prefix), `name: <workflow>` matching the dir, auto-discovered; the forge plugin supplies the `/forge:` namespace. See docs/plans/task1-naming-findings.md.
 
 - [ ] **Step 3: Commit the finding**
 

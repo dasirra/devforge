@@ -47,7 +47,6 @@ The other two need:
 
 - **`gh` CLI, authenticated**, in a repo with a GitHub remote. `/forge:planning` files issues; `/forge:building` reads them and opens the PR.
 - **A way to run your project and observe it from outside.** `/forge:building` resolves an *evaluation surface* up front (`web`, `library`, `cli`, `service`, or `native`) and black-box tests the contract against it. Only `web` needs an extra dependency: a browser automation MCP server, Claude in Chrome or Playwright.
-- **`/code-review`**, invoked by `/forge:building` for the final review of the integrated diff.
 
 ## Skills
 
@@ -97,7 +96,7 @@ flowchart TD
         b4 --> b5["5 · Static checks"]
         b5 --> b6["6 · evaluator black-box tests<br/>the running artifact<br/>max 5 rounds"]
         b6 -.->|"ROUND_FAILED<br/>fresh fixer, sees only the critique"| b4
-        b6 --> b7["7 · PR<br/>8 · /code-review high --fix"]
+        b6 --> b7["7 · PR"]
     end
 
     BUILD --> pr[/"pull request"/]

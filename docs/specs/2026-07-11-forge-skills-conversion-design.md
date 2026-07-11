@@ -57,15 +57,16 @@ Each `SKILL.md` replaces command frontmatter with skill frontmatter:
 
 ```yaml
 ---
-name: forge:building
+name: building
 description: <the current one-line description, verbatim>
 disable-model-invocation: true
 ---
 ```
 
-- `name` carries the `forge:` namespace so the Claude Code invocation stays
-  `/forge:building`. (Exact namespacing for a plugin skill is an open item, see
-  below.)
+- `name` is a required metadata field that must equal the skill's directory
+  name (`interview`/`planning`/`building`) and may not contain a colon. The
+  `/forge:` namespace comes from the plugin name plus the directory name, so a
+  skill at `skills/building/` invokes as `/forge:building`.
 - `description` is copied unchanged from the current command frontmatter.
 - `disable-model-invocation: true` makes the skill explicit-only on Claude Code,
   which is required for a human-gated staged pipeline (you do not want Claude
