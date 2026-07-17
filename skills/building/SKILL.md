@@ -181,7 +181,8 @@ only.
    fixtures and every `verify_how` for substrate-shaped tokens (ALL_CAPS
    identifiers, slash paths, collection and table names, URLs, package names)
    and confirm each appears in `grounding`. A token with no entry blocks the
-   relay.
+   relay. A criterion with an empty or missing `example` is also rejected
+   back to the generator, the same way an EXISTS entry with no grep hit is.
 
    Any NEW entry naming persistent substrate (a store, schema, collection, env
    var, or external dependency) is escalated to the human with an interactive question
@@ -196,7 +197,8 @@ only.
    contract): find missing edge cases, criteria too vague to verify, scope
    beyond the issue, criteria tagged to the wrong issue or integration
    behavior missing entirely, tests that would pass while the feature
-   is broken, and **ungrounded substrate**: any store, path, env var,
+   is broken, an `example` that contradicts or fails to illustrate its own
+   criterion, and **ungrounded substrate**: any store, path, env var,
    collection, endpoint, or dependency named in a criterion or fixture that is
    absent from the `grounding` block, or marked EXISTS without evidence, is a
    BLOCKING objection. You cannot read the code, and you do not need to: the
