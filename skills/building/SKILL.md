@@ -168,6 +168,11 @@ only.
    "movement works", never "handles empty input gracefully". Cover the
    unhappy paths the issue's Proposed behavior section describes: empty
    states, errors, edge cases.
+
+   Alongside `verify_how`, write `example` for every criterion: one concrete
+   worked case applying the criterion to specific data, e.g. for the
+   ArrowLeft criterion above, `player at (3,3), press ArrowLeft -> player at
+   (2,3)`. A criterion with no `example` is incomplete, not merely terse.
 1.5 **Lead verifies grounding mechanically** (you, before relaying the
    contract). This is a grep, not a judgment. For each EXISTS entry, run
    `git grep -n <name>` (or `test -e` for paths) and confirm the cited
