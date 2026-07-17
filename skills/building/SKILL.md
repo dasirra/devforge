@@ -223,20 +223,43 @@ hard.
 
 ## Phase 3: Human gate on the contract (default)
 
-Default: pause. Show the user the agreed contract, in this order: the
-grounding block (NEW entries first), the evaluator's residual risks, then the
-criteria list and any disputes. Wait for approval or adjustments before
-building. A human skims what he is shown first; show him the premises, not the
-paperwork.
+Default: pause. Render the agreed contract in this fixed template, one visual
+unit per criterion, statement plus example plus verification method:
+
+```
+Grounding
+  NEW:
+    - <name>: <evidence or "not yet verified">
+  EXISTS:
+    - <name>: <file:line>
+
+Residual risks (from evaluator)
+  - <risk 1>
+  - ...
+
+Criteria, grouped by issue
+  #<issue> — <title>
+    [<id>] <criterion>
+           example: <example>
+           verify: <verify_how>
+    ...
+  Disputes (if any): <criterion id> — GENERATOR: <reasoning> / EVALUATOR: <objection>
+```
+
+Grounding leads (NEW entries first) because it is the premise everything else
+stands on; a human skims what he is shown first. Then ask an interactive question:
+"Approve this contract?" with options **Approve (Recommended)**,
+**Request changes**, and **Abort**. Do not proceed to Phase 4 until the
+answer is Approve.
 
 The pause is the default because the contract is the last artifact a human can
 correct cheaply. After it, every criterion, every builder, and every sibling
 issue inherits its premises, and the amendment rule makes changing one an
 event. A minute here is worth a rebuild there.
 
-If `--no-gate` was passed: no pause. The agreed contract is already posted to
-the issue (Phase 2), leading with the same grounding block and residual risks
-above the criteria, so the human can inspect it asynchronously and the run
+If `--no-gate` was passed: no pause, and no interactive question. The agreed
+contract is already posted to the issue (Phase 2), rendered in the same
+template above, so the human can inspect it asynchronously and the run
 continues into execution. Use this when you already trust the premises, not to
 save a minute.
 
