@@ -287,6 +287,14 @@ anyone:
 - Each teammate appends what it did to `harness/progress.json`.
 - Keep changes consistent with surrounding code: naming, structure, comment
   density.
+- **Before reporting done, each teammate exercises every criterion in its
+  brief against its own build**, the way that criterion's `example` and
+  `verify_how` describe, and fixes what fails first. This is a pre-handoff
+  check, not a build-order rule: it does not change when code gets written
+  and it does not replace Phase 6. The evaluator still never sees this
+  check, never reads builder tests or implementation, and still writes its
+  own scripts from the contract alone; this step only reduces how much
+  obviously-broken work reaches that loop.
 - **Forbid this run's vocabulary in the artifact, in every teammate prompt.**
   No issue numbers, no contract clause ids, no `harness/` paths, no role
   names ("the evaluator", "eval seam", "the contract") in comments,
