@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Idea-to-PR pipeline with a human gate at each seam: grill an idea into a spec, plan it adversarially into GitHub issues, then implement it against a negotiated contract and ship a PR.",
   "keywords": ["pi-package", "workflow", "planning", "github", "issues", "pull-request", "agents"],
   "pi": { "skills": ["./skills"] }

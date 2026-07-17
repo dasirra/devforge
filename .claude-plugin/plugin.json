@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Idea-to-PR pipeline with a human gate at each seam: grill an idea into a spec, plan it adversarially into GitHub issues, then implement it against a negotiated contract and ship a PR.",
   "author": {
     "name": "Daniel Asirra",

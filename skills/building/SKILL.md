@@ -46,10 +46,12 @@ All shared state lives in `harness/` inside the worktree (gitignored):
   re-derives it. `grounding` is the array of substrate the contract stands on,
   each entry `{name, status: EXISTS|NEW, evidence, human_ack}`; see Phase 2.
   Each criterion is
-  `{id, issue, criterion, verify_how, status: proposed|agreed|pass|fail}`.
-  `issue` is the issue number the criterion belongs to, or `"integration"`
-  for cross-issue behavior. Single-issue and free-form runs use one issue
-  value throughout.
+  `{id, issue, criterion, example, verify_how, status: proposed|agreed|pass|fail}`.
+  `example` is a single worked-example string showing the criterion applied
+  to concrete data, in the same register as the criterion itself (for
+  example, `parse('') -> raises ValueError('empty input')`). `issue` is the
+  issue number the criterion belongs to, or `"integration"` for cross-issue
+  behavior. Single-issue and free-form runs use one issue value throughout.
 - `harness/critique.md`: evaluator findings, rewritten each round
 - `harness/eval/`: the evaluator's throwaway verification scripts. Never
   committed, never merged into the project's test suite.
@@ -166,6 +168,11 @@ only.
    "movement works", never "handles empty input gracefully". Cover the
    unhappy paths the issue's Proposed behavior section describes: empty
    states, errors, edge cases.
+
+   Alongside `verify_how`, write `example` for every criterion: one concrete
+   worked case applying the criterion to specific data, e.g. for the
+   ArrowLeft criterion above, `player at (3,3), press ArrowLeft -> player at
+   (2,3)`. A criterion with no `example` is incomplete, not merely terse.
 1.5 **Lead verifies grounding mechanically** (you, before relaying the
    contract). This is a grep, not a judgment. For each EXISTS entry, run
    `git grep -n <name>` (or `test -e` for paths) and confirm the cited
@@ -174,7 +181,8 @@ only.
    fixtures and every `verify_how` for substrate-shaped tokens (ALL_CAPS
    identifiers, slash paths, collection and table names, URLs, package names)
    and confirm each appears in `grounding`. A token with no entry blocks the
-   relay.
+   relay. A criterion with an empty or missing `example` is also rejected
+   back to the generator, the same way an EXISTS entry with no grep hit is.
 
    Any NEW entry naming persistent substrate (a store, schema, collection, env
    var, or external dependency) is escalated to the human with an interactive question
@@ -189,7 +197,8 @@ only.
    contract): find missing edge cases, criteria too vague to verify, scope
    beyond the issue, criteria tagged to the wrong issue or integration
    behavior missing entirely, tests that would pass while the feature
-   is broken, and **ungrounded substrate**: any store, path, env var,
+   is broken, an `example` that contradicts or fails to illustrate its own
+   criterion, and **ungrounded substrate**: any store, path, env var,
    collection, endpoint, or dependency named in a criterion or fixture that is
    absent from the `grounding` block, or marked EXISTS without evidence, is a
    BLOCKING objection. You cannot read the code, and you do not need to: the
@@ -214,20 +223,47 @@ hard.
 
 ## Phase 3: Human gate on the contract (default)
 
-Default: pause. Show the user the agreed contract, in this order: the
-grounding block (NEW entries first), the evaluator's residual risks, then the
-criteria list and any disputes. Wait for approval or adjustments before
-building. A human skims what he is shown first; show him the premises, not the
-paperwork.
+Default: pause. Render the agreed contract in this fixed template, one visual
+unit per criterion, statement plus example plus verification method:
+
+```
+Grounding
+  NEW:
+    - <name>: <evidence or "not yet verified">
+  EXISTS:
+    - <name>: <file:line>
+
+Residual risks (from evaluator)
+  - <risk 1>
+  - ...
+
+Criteria, grouped by issue
+  #<issue>: <title>
+    [<id>] <criterion>
+           example: <example>
+           verify: <verify_how>
+    ...
+  Disputes (if any): <criterion id>: GENERATOR: <reasoning> / EVALUATOR: <objection>
+```
+
+Grounding leads (NEW entries first) because it is the premise everything else
+stands on; a human skims what he is shown first. Then ask an interactive question:
+"Approve this contract?" with options **Approve (Recommended)**,
+**Request changes**, and **Abort**. Do not proceed to Phase 4 until the
+answer is Approve. On Request changes, route the human's feedback through the
+same channel as the amendment rule above: the generator proposes the
+amendment with a reason, the evaluator must accept, the issue comment gets
+updated with an "Amended" note, then this gate re-runs on the result. On
+Abort, stop the run without building.
 
 The pause is the default because the contract is the last artifact a human can
 correct cheaply. After it, every criterion, every builder, and every sibling
 issue inherits its premises, and the amendment rule makes changing one an
 event. A minute here is worth a rebuild there.
 
-If `--no-gate` was passed: no pause. The agreed contract is already posted to
-the issue (Phase 2), leading with the same grounding block and residual risks
-above the criteria, so the human can inspect it asynchronously and the run
+If `--no-gate` was passed: no pause, and no interactive question. The agreed
+contract is already posted to the issue (Phase 2), rendered in the same
+template above, so the human can inspect it asynchronously and the run
 continues into execution. Use this when you already trust the premises, not to
 save a minute.
 
@@ -255,6 +291,14 @@ anyone:
 - Each teammate appends what it did to `harness/progress.json`.
 - Keep changes consistent with surrounding code: naming, structure, comment
   density.
+- **Before reporting done, each teammate exercises every criterion in its
+  brief against its own build**, the way that criterion's `example` and
+  `verify_how` describe, and fixes what fails first. This is a pre-handoff
+  check, not a build-order rule: it does not change when code gets written
+  and it does not replace Phase 6. The evaluator still never sees this
+  check, never reads builder tests or implementation, and still writes its
+  own scripts from the contract alone; this step only reduces how much
+  obviously-broken work reaches that loop.
 - **Forbid this run's vocabulary in the artifact, in every teammate prompt.**
   No issue numbers, no contract clause ids, no `harness/` paths, no role
   names ("the evaluator", "eval seam", "the contract") in comments,
