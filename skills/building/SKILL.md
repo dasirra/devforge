@@ -250,7 +250,11 @@ Grounding leads (NEW entries first) because it is the premise everything else
 stands on; a human skims what he is shown first. Then ask an interactive question:
 "Approve this contract?" with options **Approve (Recommended)**,
 **Request changes**, and **Abort**. Do not proceed to Phase 4 until the
-answer is Approve.
+answer is Approve. On Request changes, route the human's feedback through the
+same channel as the amendment rule above: the generator proposes the
+amendment with a reason, the evaluator must accept, the issue comment gets
+updated with an "Amended" note, then this gate re-runs on the result. On
+Abort, stop the run without building.
 
 The pause is the default because the contract is the last artifact a human can
 correct cheaply. After it, every criterion, every builder, and every sibling
