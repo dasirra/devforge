@@ -22,17 +22,13 @@ Each stage stops and hands you an artifact. Nothing runs the next stage on your 
 
 The line between `PM` and `DEV` is the one rule everything else hangs off.
 
-**`/devforge:interview` and `/devforge:planning` work at PM altitude. They answer what and why.** They are forbidden from naming a file, a schema, a function, a library, a table, or an endpoint. What they produce, the spec and then the GitHub issues, describes observable behavior only: user stories, how the product responds including its empty and error and edge states, scope boundaries, and dependencies between issues. A reviewer who reads nothing but the issues should understand the whole proposed change. If the planner leaks a technical detail, the orchestrator strips it before filing.
+**`/devforge:interview` and `/devforge:planning` work at PM altitude: what and why.** They're forbidden from naming a file, schema, function, library, table, or endpoint. Specs and issues describe observable behavior only: user stories, empty/error/edge states, scope, dependencies. A reviewer who reads nothing but the issues should understand the whole change. If the planner leaks a technical detail, the orchestrator strips it before filing.
 
-This is deliberate, and it costs something, so it's worth saying why.
+**`/devforge:building` works at DEV altitude: how.** It negotiates a contract of testable criteria against the codebase as it exists right now, not as planning imagined it (a criterion like `parse("") raises ValueError containing "empty input"` is the only kind an evaluator can actually check). There is no upfront technical plan, no `PLAN.md`: the contract states what "done" means, builders decide how to get there against live code.
 
-An architecture decided before the work starts is a decision made with the least information you will ever have. By the time someone implements it, the codebase has moved, and everyone is now bound to a design chosen against a repository that no longer exists. Worse, it invites the wrong review. Nobody usefully argues about a class diagram embedded in a ticket that gets picked up in two weeks. People argue well about behavior, and behavior is exactly what survives contact with the codebase.
+Between the two sits a human gate: issues land on GitHub and stop there until you read, edit, and arbitrate them.
 
-**`/devforge:building` works at DEV altitude. It answers how.** The first thing it does is negotiate a contract: granular, testable criteria, written against the codebase as it exists at that moment, not as someone imagined it during planning. Technical specificity is not merely allowed here, it is required, because a criterion like `parse("") raises ValueError whose message contains "empty input"` is the only kind an evaluator can actually check.
-
-Even at DEV altitude there is no upfront technical plan and no `PLAN.md`. The contract states what "done" means; the builders decide how to get there, against live code, as they work.
-
-Between the two sits a human gate. The issues land on GitHub and stop there. You read them, edit them, arbitrate whatever the planner and critic could not agree on, and only then does any code exist.
+Why split it this way? An architecture decided before the work starts is a decision made with the least information you will ever have. By the time someone implements it, the codebase has moved. Behavior is what survives contact with the code; a class diagram embedded in a two-week-old ticket doesn't.
 
 ## Install
 
@@ -108,13 +104,11 @@ flowchart TD
     h3 -.->|"next phase"| BUILD
 ```
 
-The contract negotiated in Phase 2 is the only plan `/devforge:building` makes. There is no PLAN.md. Technical decisions belong to the builders, made against the code as they work, and Phase 6 judges the result against the contract rather than against the builders' account of it.
+The contract negotiated in Phase 2 is the only plan `/devforge:building` makes: no PLAN.md, no upfront technical design. Facts are the exception: before writing a criterion, the generator declares every store, path, env var, and dependency it will name as `EXISTS` (with `file:line` evidence) or `NEW`; any `NEW` persistent substrate stops the run for one human question, gate or no gate.
 
-Facts are the exception, because a fact is not a decision. Before it writes a single criterion, the generator declares every store, path, env var, collection, and dependency its contract will name, each marked `EXISTS` with `file:line` evidence or `NEW`. The lead reproduces each `EXISTS` with a grep, and any `NEW` persistent substrate stops the run for one human question, gate or no gate. Deferring a decision keeps options open; deferring a fact just means somebody downstream invents it, and inventing and discovering look identical from inside a contract.
+By default the pipeline pauses on that negotiated contract for your approval, since it's the last artifact you can correct cheaply: every builder and sibling issue inherits its premises. `--no-gate` skips the pause when you already trust it.
 
-For the same reason, `/devforge:building` pauses on the negotiated contract by default: a fixed template showing the grounding block and the evaluator's residual risks before the criteria, each criterion with its own worked example, ending in a real approve / request-changes / abort prompt so the pause holds on every harness rather than depending on a model choosing to stop. The contract is the last artifact you can correct cheaply: after it, every criterion, every builder and every sibling issue inherits its premises. `--no-gate` runs straight through when you already trust them.
-
-Every phase, agent, artifact, and loop is laid out in the [full pipeline reference](https://htmlpreview.github.io/?https://github.com/dasirra/devforge/blob/main/docs/pipeline.html), which also documents the evaluation surfaces. Source: [`docs/pipeline.html`](docs/pipeline.html).
+Full detail on every phase, agent, artifact, and loop: [pipeline reference](https://htmlpreview.github.io/?https://github.com/dasirra/devforge/blob/main/docs/pipeline.html) ([source](docs/pipeline.html)).
 
 ## Design
 
@@ -128,25 +122,23 @@ Three ideas run through all three skills.
 
 ## Portability
 
-DevForge's skills are written in harness-neutral prose: role tiers (`judgment-tier`, `labor-tier`) and generic verbs instead of one agent's tool and model names. Each supported harness has a binding doc that maps those neutral terms to its concrete tools and models:
+Skills are written in harness-neutral prose: role tiers (`judgment-tier`, `labor-tier`) instead of one agent's tool and model names. Each supported harness maps those to concrete tools and models:
 
-- **Claude Code**: opus for judgment-tier, sonnet for labor-tier; binding is an exact-string substitution.
-- **Pi**, for open-weight models (for example served through Ollama): a single model for every tier; requires the `pi-subagents` package for forked-context subagents, without which the adversarial pairs collapse into self-review.
-- **Google Antigravity**: Gemini 3.1 Pro for judgment-tier, Gemini 3.5 Flash for labor-tier; semantic binding through native subagents.
+- **Claude Code**: opus for judgment-tier, sonnet for labor-tier.
+- **Pi** (open-weight models, e.g. via Ollama): one model for every tier; needs the `pi-subagents` package for forked-context subagents.
+- **Google Antigravity**: Gemini 3.1 Pro for judgment-tier, Gemini 3.5 Flash for labor-tier.
 
-What makes a planner/critic or generator/evaluator pair adversarial is that their contexts are separated, not that they run different models. A harness running one model on both sides loses the cost split but keeps the method, as long as it has genuinely forked-context subagents. See [`docs/harness-bindings/`](docs/harness-bindings/README.md) for the full mapping and each harness's caveats: which evaluation surfaces it supports, whether it selects models per role, and what it needs for context isolation.
+What makes a pair adversarial is separated contexts, not different models: a harness running one model on both sides keeps the method as long as its subagents are genuinely forked-context. Full mapping and caveats per harness: [`docs/harness-bindings/`](docs/harness-bindings/README.md).
 
 ## Credits
 
-DevForge is an opinionated idea-to-PR workflow. It assembles ideas that are not mine, and the opinions and the mistakes in assembling them are.
+DevForge assembles ideas that are not mine; the opinions and mistakes in assembling them are.
 
-Mine are the three-skill shape with a human gate at each seam, `/devforge:planning` as an adversarial PM-level pass that files straight to GitHub and leaves contested items for a human to arbitrate, the altitude discipline that bans technical content until `/devforge:building` negotiates it against the live codebase, the evaluation surfaces and the preflight that resolves one before anything expensive happens, and the rule that the evaluator never runs the builders' own tests.
+Mine: the three-skill shape with a human gate at each seam, `/devforge:planning` as an adversarial PM pass that files straight to GitHub for human arbitration, the altitude discipline that bans technical content until `/devforge:building` negotiates it live, the evaluation surfaces and preflight, and the rule that the evaluator never runs the builders' own tests.
 
-**[Full Walkthrough: Workflow for AI Coding](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**, Matt Pocock, at [AI Engineer](https://www.ai.engineer/). The grilling session that became `/devforge:interview`, the smart zone and dumb zone, slicing work into vertical issues an agent can pick up independently, and the distinction between running an agent human-in-the-loop and running it AFK, unattended and away from the keyboard.
-
-**[Build Agents That Run for Hours (Without Losing the Plot)](https://www.youtube.com/watch?v=mR-WAvEPRwE)**, Ash Prabaker and Andrew Wilson of Anthropic, at AI Engineer. The generator/evaluator pattern, contract negotiation through files on disk, the case against granular upfront technical planning, and the observation that models are poor judges of their own output. `/devforge:building` is largely this talk, made concrete.
-
-**[superpowers](https://github.com/obra/superpowers)**, Jesse Vincent (obra). An agentic skills framework and development methodology. The one-question-at-a-time brainstorm, worktree isolation before any implementation work begins, and the insistence that completion be verified rather than asserted.
+- **[Full Walkthrough: Workflow for AI Coding](https://www.youtube.com/watch?v=-QFHIoCo-Ko)**, Matt Pocock ([AI Engineer](https://www.ai.engineer/)): the grilling session behind `/devforge:interview`, smart/dumb zone, vertical issue slicing, human-in-the-loop vs. AFK.
+- **[Build Agents That Run for Hours](https://www.youtube.com/watch?v=mR-WAvEPRwE)**, Ash Prabaker & Andrew Wilson (Anthropic, AI Engineer): the generator/evaluator pattern and contract negotiation through files on disk. `/devforge:building` is largely this talk, made concrete.
+- **[superpowers](https://github.com/obra/superpowers)**, Jesse Vincent (obra): one-question-at-a-time brainstorming, worktree isolation before implementation, verified rather than asserted completion.
 
 ## License
 
